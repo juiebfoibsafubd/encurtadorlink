@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encurtador de URL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; font-size: 2.2em; }
+        input, button { width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; }
+        input { border: 2px solid #ddd; margin-bottom: 20px; transition: border-color 0.3s; }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; cursor: pointer; transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .result, .stats-result { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; }
+        .short-url { color: #667eea; text-decoration: none; font-weight: bold; word-break: break-all; }
+        .short-url:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Encurtador de URL</h1>
+        <input type="url" id="longUrl" placeholder="https://exemplo.com/url-muito-longa...">
+        <button onclick="shortenUrl()">Encurtar URL</button>
+        <div id="result" class="result">
+            <h3>✅ URL Encurtada:</h3>
+            <a id="shortUrl" class="short-url" target="_blank"></a>
+        </div>
+        <div class="stats">
+            <h3>📊 Estatísticas</h3>
+            <input type="text" id="statsCode" placeholder="Digite o código da URL">
+            <button onclick="getStats()" style="background:#28a745;">Ver Estatísticas</button>
+            <div id="statsResult" class="stats-result"></div>
+        </div>
+    </div>
+    <script>
+        async function shortenUrl() {
+            const longUrl = document.getElementById('longUrl').value.trim();
+            if (!longUrl) return alert('Por favor, digite uma URL');
+            const response = await fetch('/shorten', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ longUrl })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                const shortUrlElement = document.getElementById('shortUrl');
+                shortUrlElement.href = `/${data.shortCode}`;
+                shortUrlElement.textContent = data.shortUrl;
+                document.getElementById('result').style.display = 'block';
+            } else alert('Erro: ' + (data.error || 'Falha ao encurtar URL'));
+        }
+        async function getStats() {
+            const code = document.getElementById('statsCode').value.trim();
+            if (!code) return alert('Por favor, digite um código');
+            const response = await fetch(`/api/stats/${code}`);
+            const stats = await response.json();
+            const statsResult = document.getElementById('statsResult');
+            if (response.ok) {
+                statsResult.innerHTML = `<p><strong>🌐 URL Original:</strong> ${stats.longUrl}</p>
+                    <p><strong>👆 Cliques:</strong> ${stats.clicks}</p>
+                    <p><strong>📅 Criada em:</strong> ${new Date(stats.createdAt).toLocaleString('pt-BR')}</p>`;
+            } else statsResult.innerHTML = '<p style="color:red;">❌ URL não encontrada</p>';
+            statsResult.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
