@@ -1,16 +1,8 @@
 {
-  "name": "url-shortener",
+  "name": "url-shortener-vercel",
   "version": "1.0.0",
-  "description": "URL Shortener Service",
-  "main": "server.js",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.0"
-  },
-  "keywords": ["url", "shortener", "node", "express"],
-  "author": "Your Name",
-  "license": "MIT"
+    "start": "node server.js"
+  }
 }
