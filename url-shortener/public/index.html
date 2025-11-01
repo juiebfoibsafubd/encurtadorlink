@@ -1,86 +1,83 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encurtador de URL</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-        }
-        h1 { text-align: center; color: #333; margin-bottom: 30px; font-size: 2.2em; }
-        input, button { width: 100%; padding: 15px; border-radius: 8px; font-size: 16px; }
-        input { border: 2px solid #ddd; margin-bottom: 20px; transition: border-color 0.3s; }
-        input:focus { outline: none; border-color: #667eea; }
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; cursor: pointer; transition: transform 0.2s;
-        }
-        button:hover { transform: translateY(-2px); }
-        .result, .stats-result { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; }
-        .short-url { color: #667eea; text-decoration: none; font-weight: bold; word-break: break-all; }
-        .short-url:hover { text-decoration: underline; }
-    </style>
+  <meta charset="utf-8">
+  <title>Encurtador de URL</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background:#f8f9fb; color:#111; }
+    .wrap { max-width:720px; margin:40px auto; padding:24px; background:#fff; border-radius:8px; box-shadow:0 6px 24px rgba(12,20,40,0.06); }
+    input, button { font-size:16px; padding:10px; border-radius:6px; border:1px solid #ddd; width:100%; box-sizing:border-box; }
+    button { background:#111; color:#fff; border:none; cursor:pointer; margin-top:8px; }
+    .row { display:flex; gap:8px; }
+    .row input { flex:1; }
+    .result { margin-top:14px; padding:12px; background:#f1f5f9; border-radius:6px; word-break:break-all; }
+    .stats { margin-top:18px; }
+    small { color:#555; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔗 Encurtador de URL</h1>
-        <input type="url" id="longUrl" placeholder="https://exemplo.com/url-muito-longa...">
-        <button onclick="shortenUrl()">Encurtar URL</button>
-        <div id="result" class="result">
-            <h3>✅ URL Encurtada:</h3>
-            <a id="shortUrl" class="short-url" target="_blank"></a>
-        </div>
-        <div class="stats">
-            <h3>📊 Estatísticas</h3>
-            <input type="text" id="statsCode" placeholder="Digite o código da URL">
-            <button onclick="getStats()" style="background:#28a745;">Ver Estatísticas</button>
-            <div id="statsResult" class="stats-result"></div>
-        </div>
+  <div class="wrap">
+    <h1>Encurtador de URL</h1>
+    <div>
+      <input id="longUrl" placeholder="Cole a URL longa (ex: example.com ou https://site.com)">
+      <button id="btnShort">Encurtar</button>
+      <div id="result" class="result" style="display:none;">
+        <div>URL curta:</div>
+        <a id="shortLink" href="#" target="_blank"></a>
+      </div>
     </div>
-    <script>
-        async function shortenUrl() {
-            const longUrl = document.getElementById('longUrl').value.trim();
-            if (!longUrl) return alert('Por favor, digite uma URL');
-            const response = await fetch('/shorten', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ longUrl })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                const shortUrlElement = document.getElementById('shortUrl');
-                shortUrlElement.href = `/${data.shortCode}`;
-                shortUrlElement.textContent = data.shortUrl;
-                document.getElementById('result').style.display = 'block';
-            } else alert('Erro: ' + (data.error || 'Falha ao encurtar URL'));
-        }
-        async function getStats() {
-            const code = document.getElementById('statsCode').value.trim();
-            if (!code) return alert('Por favor, digite um código');
-            const response = await fetch(`/api/stats/${code}`);
-            const stats = await response.json();
-            const statsResult = document.getElementById('statsResult');
-            if (response.ok) {
-                statsResult.innerHTML = `<p><strong>🌐 URL Original:</strong> ${stats.longUrl}</p>
-                    <p><strong>👆 Cliques:</strong> ${stats.clicks}</p>
-                    <p><strong>📅 Criada em:</strong> ${new Date(stats.createdAt).toLocaleString('pt-BR')}</p>`;
-            } else statsResult.innerHTML = '<p style="color:red;">❌ URL não encontrada</p>';
-            statsResult.style.display = 'block';
-        }
-    </script>
+
+    <div class="stats">
+      <h3>Estatísticas</h3>
+      <div style="display:flex;gap:8px">
+        <input id="code" placeholder="Código da URL curta">
+        <button id="btnStats">Buscar</button>
+      </div>
+      <div id="statsResult" style="margin-top:10px"></div>
+    </div>
+    <hr style="margin-top:18px">
+    <small>Dados em memória. Reinício do servidor zera os registros.</small>
+  </div>
+
+  <script>
+    async function shorten(longUrl) {
+      const res = await fetch('/shorten', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ longUrl })
+      });
+      return res.json().then(d => ({ ok: res.ok, data: d }));
+    }
+
+    document.getElementById('btnShort').addEventListener('click', async () => {
+      const longUrl = document.getElementById('longUrl').value.trim();
+      if (!longUrl) return;
+      const r = await shorten(longUrl);
+      if (r.ok) {
+        const url = 'https://' + r.data.shortUrl;
+        document.getElementById('shortLink').href = url;
+        document.getElementById('shortLink').textContent = url;
+        document.getElementById('result').style.display = 'block';
+      } else {
+        alert(r.data && r.data.error ? r.data.error : 'Erro');
+      }
+    });
+
+    document.getElementById('btnStats').addEventListener('click', async () => {
+      const code = document.getElementById('code').value.trim();
+      if (!code) return;
+      const res = await fetch('/api/stats/' + code);
+      const data = await res.json();
+      const el = document.getElementById('statsResult');
+      if (res.ok) {
+        el.innerHTML = '<div><strong>URL:</strong> ' + data.longUrl + '</div>' +
+                       '<div><strong>Cliques:</strong> ' + data.clicks + '</div>' +
+                       '<div><strong>Criada em:</strong> ' + new Date(data.createdAt).toLocaleString() + '</div>';
+      } else {
+        el.innerHTML = '<div style="color:#b00">Não encontrada</div>';
+      }
+    });
+  </script>
 </body>
 </html>
